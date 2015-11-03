@@ -3,6 +3,9 @@
 #include <dlfcn.h>
 #include <ctype.h>
 
+// ICU4C - icu::Collator
+#include <unicode/coll.h>
+
 #include "sqlite3.h"
 #include "com_couchbase_touchdb_TDCollateJSON.h"
 #include "android/log.h"
@@ -347,9 +350,28 @@ static jstring createJavaStringFromJSON(const char** in) {
 }
 
 static int compareStringsUnicode(const char** in1, const char** in2) {
+	LOGE("compareStringsUnicode() in1=%s, in2=%s", *in1, *in2);
+
     int result = compareStringsUnicodeFast(in1, in2);
+	LOGE("compareStringsUnicode() result 1 = %d", result);
     if (result > -2)
         return result;
+
+    // ICU4C - Collator
+    UErrorCode status = U_ZERO_ERROR; 
+    Collator *coll = Collator::createInstance("en_US", status);
+    if(U_SUCCESS(status)) {
+    	LOGE("coll=%p", coll);
+    	result = (int)coll->compare(*in1, *in2);
+    	delete coll; 
+	}else{
+		LOGE("status=%d", status);
+	}
+	LOGE("compareStringsUnicode() result 2 = %d", result);
+
+	return result;
+
+    /*
     // Fast compare failed, so resort to using NSString:
 	jstring str1 = createJavaStringFromJSON(in1);
 	jstring str2 = createJavaStringFromJSON(in2);
@@ -358,6 +380,7 @@ static int compareStringsUnicode(const char** in1, const char** in2) {
 	env->DeleteLocalRef(str1);
 	env->DeleteLocalRef(str2);
 	return result;
+	*/
 }
 
 static double readNumber(const char* start, const char* end, char** endOfNumber) {
@@ -635,4 +658,12 @@ JNIEXPORT jint JNICALL Java_com_couchbase_touchdb_TDCollateJSON_testDigitToInt
   (JNIEnv *env, jclass clazz, jint digit) {
 	int result = digittoint(digit);
 	return result;
+}
+
+JNIEXPORT void JNICALL Java_com_couchbase_touchdb_TDCollateJSON_setICURoot
+	(JNIEnv *env, jclass clazz, jstring ICURoot)
+{
+	char const * ICURootPath = env->GetStringUTFChars(ICURoot, NULL);
+	setenv("CBL_ICU_PREFIX", ICURootPath, 1);
+	env->ReleaseStringUTFChars(ICURoot, ICURootPath);
 }

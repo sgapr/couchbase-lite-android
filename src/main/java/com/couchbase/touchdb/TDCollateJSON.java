@@ -24,6 +24,9 @@ public class TDCollateJSON {
     public static native char testEscape(String source);
     public static native int testDigitToInt(int digit);
 
+    // Sets the root directory to search for the ICU data file
+    public static native void setICURoot(String path);
+
     /**
      * Convenience wrapper around testCollateJSON which calculates lengths based on string lengths
      * of params.

@@ -39,6 +39,14 @@ JNIEXPORT jchar JNICALL Java_com_couchbase_touchdb_TDCollateJSON_testEscape
 JNIEXPORT jint JNICALL Java_com_couchbase_touchdb_TDCollateJSON_testDigitToInt
   (JNIEnv *, jclass, jint);
 
+/*
+ * Class:     com_couchbase_touchdb_TDCollateJSON
+ * Method:    setICURoot
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_com_couchbase_touchdb_TDCollateJSON_setICURoot
+        (JNIEnv *, jclass, jstring);
+
 #ifdef __cplusplus
 }
 #endif

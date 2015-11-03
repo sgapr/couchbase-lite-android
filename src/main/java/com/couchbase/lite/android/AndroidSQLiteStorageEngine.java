@@ -27,18 +27,29 @@ import com.couchbase.lite.util.Log;
 import com.couchbase.touchdb.RevCollator;
 import com.couchbase.touchdb.TDCollateJSON;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Map;
+import java.util.zip.ZipInputStream;
 
 public class AndroidSQLiteStorageEngine implements SQLiteStorageEngine {
     public static final String TAG = "AndroidSQLiteStorageEngine";
 
     private SQLiteDatabase database;
 
+    private android.content.Context context = null;
+
+    protected AndroidSQLiteStorageEngine(android.content.Context context){
+        this.context = context;
+    }
     @Override
     public boolean open(String path) {
         if(database != null && database.isOpen()) {
             return true;
         }
+
 
         try {
             // Write-Ahead Logging (WAL) http://sqlite.org/wal.html
@@ -54,6 +65,7 @@ public class AndroidSQLiteStorageEngine implements SQLiteStorageEngine {
             database = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.CREATE_IF_NECESSARY);
 
             Log.v(Log.TAG_DATABASE, "%s: Opened Android sqlite db", this);
+            loadLibs(context, context.getFilesDir());
             TDCollateJSON.registerCustomCollators(database);
             RevCollator.register(database);
         } catch(SQLiteException e) {
@@ -228,6 +240,56 @@ public class AndroidSQLiteStorageEngine implements SQLiteStorageEngine {
         @Override
         public boolean isNull(int columnIndex) {
             return delegate.isNull(columnIndex);
+        }
+    }
+
+    private static synchronized void loadLibs(android.content.Context context, File workingDir) {
+        boolean systemICUFileExists = new File("/system/usr/icu/icudt53l.dat").exists();
+        String icuRootPath = systemICUFileExists ? "/system/usr" : workingDir.getAbsolutePath();
+        TDCollateJSON.setICURoot(icuRootPath);
+        if(!systemICUFileExists){
+            loadICUData(context, workingDir);
+        }
+    }
+
+    private static void loadICUData(android.content.Context context, File workingDir) {
+        OutputStream out = null;
+        ZipInputStream in = null;
+        File icuDir = new File(workingDir, "icu");
+        File icuDataFile = new File(icuDir, "icudt53l.dat");
+        try {
+            if(!icuDir.exists()) icuDir.mkdirs();
+            if(!icuDataFile.exists()) {
+                in = new ZipInputStream(context.getAssets().open("icudt53l.zip"));
+                in.getNextEntry();
+                out =  new FileOutputStream(icuDataFile);
+                byte[] buf = new byte[1024];
+                int len;
+                while ((len = in.read(buf)) > 0) {
+                    out.write(buf, 0, len);
+                }
+            }
+        }
+        catch (Exception ex) {
+            Log.e(TAG, "Error copying icu dat file", ex);
+            if(icuDataFile.exists()){
+                icuDataFile.delete();
+            }
+            throw new RuntimeException(ex);
+        }
+        finally {
+            try {
+                if(in != null){
+                    in.close();
+                }
+                if(out != null){
+                    out.flush();
+                    out.close();
+                }
+            } catch (IOException ioe){
+                Log.e(TAG, "Error in closing streams IO streams after expanding ICU dat file", ioe);
+                throw new RuntimeException(ioe);
+            }
         }
     }
 }
