@@ -89,7 +89,7 @@ public class LiteTestCase extends LiteTestCaseBase {
     }
 
     protected void startCBLite() throws IOException {
-        LiteTestContext context = new LiteTestContext();
+        LiteTestContext context = new LiteTestContext(this.getContext());
         Manager.enableLogging(TAG, Log.VERBOSE);
         Manager.enableLogging(Log.TAG, Log.VERBOSE);
         Manager.enableLogging(Log.TAG_SYNC, Log.VERBOSE);

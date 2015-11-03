@@ -57,7 +57,7 @@ public class Test9_LoadDB extends LiteTestCase {
             try {
                 tearDown();
 
-                manager = new Manager(new LiteTestContext(), Manager.DEFAULT_OPTIONS);
+                manager = new Manager(new LiteTestContext(getContext()), Manager.DEFAULT_OPTIONS);
                 database = manager.getDatabase(DEFAULT_TEST_DB);
             }
             catch(Exception ex)

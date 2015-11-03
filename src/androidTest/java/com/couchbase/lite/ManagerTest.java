@@ -46,7 +46,7 @@ public class ManagerTest extends LiteTestCase {
         Database db = manager.getDatabaseWithoutOpening("foo", mustExist);
         assertNotNull(db);
         assertEquals("foo", db.getName());
-        assertTrue(db.getPath().startsWith(new LiteTestContext(false).getRootDirectory().getAbsolutePath()));
+        assertTrue(db.getPath().startsWith(new LiteTestContext(getContext(),false).getRootDirectory().getAbsolutePath()));
         assertFalse(db.exists());
 
 
@@ -69,7 +69,7 @@ public class ManagerTest extends LiteTestCase {
     public void testUpgradeOldDatabaseFiles() throws Exception {
 
         String directoryName = "test-directory-" + System.currentTimeMillis();
-        LiteTestContext context = new LiteTestContext(directoryName);
+        LiteTestContext context = new LiteTestContext(getContext(),directoryName);
 
         File directory = context.getFilesDir();
         if(!directory.exists()) {

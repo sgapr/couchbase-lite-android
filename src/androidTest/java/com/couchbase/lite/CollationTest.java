@@ -102,6 +102,12 @@ public class CollationTest extends LiteTestCase {
         Assert.assertEquals(-1, TDCollateJSON.testCollateJSONWrapper(mode, "[1,[2,3],4]", "[1,[2,3.1],4,5,6]"));
     }
 
+    public void testCollateJapaneseStrings() {
+        int mode = kTDCollateJSON_Unicode;
+        Assert.assertEquals(-1, TDCollateJSON.testCollateJSONWrapper(mode, encode("あ"), encode("い")));
+        Assert.assertEquals(1, TDCollateJSON.testCollateJSONWrapper(mode, encode("い"), encode("あ")));
+        Assert.assertEquals(0, TDCollateJSON.testCollateJSONWrapper(mode, encode("あ"), encode("あ")));
+    }
     public void testCollateUnicodeStrings() {
         int mode = kTDCollateJSON_Unicode;
         Assert.assertEquals(0, TDCollateJSON.testCollateJSONWrapper(mode, encode("fr�d"), encode("fr�d")));

@@ -10,7 +10,8 @@ public class LiteTestContext extends LiteTestContextBase implements Context {
 
     private File filesDir;
 
-    public LiteTestContext(String subdir, boolean deleteSubdirectory) {
+    public LiteTestContext(android.content.Context context, String subdir, boolean deleteSubdirectory) {
+        super(context);
         filesDir = new File(getRootDirectory(), subdir);
 
         if (deleteSubdirectory) {
@@ -26,16 +27,15 @@ public class LiteTestContext extends LiteTestContextBase implements Context {
         }
     }
 
-    public LiteTestContext(String subdir) {
-        this(subdir, true);
+    public LiteTestContext(android.content.Context context) {
+        this(context, true);
     }
 
-    public LiteTestContext() {
-        this(true);
+    public LiteTestContext(android.content.Context context, String subdir) {
+        this(context, subdir, true);
     }
-
-    public LiteTestContext(boolean deleteSubdirectory) {
-        this("test", deleteSubdirectory);
+    public LiteTestContext(android.content.Context context, boolean deleteSubdirectory) {
+        this(context, "test", deleteSubdirectory);
     }
 
     @Override

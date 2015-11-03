@@ -1,5 +1,7 @@
 package com.couchbase.test.lite;
 
+import android.content.Context;
+
 import com.couchbase.lite.android.AndroidSQLiteStorageEngineFactory;
 import com.couchbase.lite.storage.SQLiteStorageEngineFactory;
 
@@ -12,7 +14,10 @@ import java.io.*;
 public class LiteTestContextBase {
     private File rootDirectory;
 
-    public LiteTestContextBase() {
+    private android.content.Context context = null;
+
+    public LiteTestContextBase(Context context) {
+        this.context = context;
         rootDirectory = new File(System.getProperty("user.dir"), "data/data/com.couchbase.lite.test/files");
         // The assumption is that rootDirectory is just a container and all 'real' work will happen in a subdirectory.
         // Which means that clean up for a test should involve deleting the sub-directory, not the root directory since
@@ -28,6 +33,6 @@ public class LiteTestContextBase {
     }
 
     public SQLiteStorageEngineFactory getSQLiteStorageEngineFactory() {
-        return new AndroidSQLiteStorageEngineFactory();
+        return new AndroidSQLiteStorageEngineFactory(context);
     }
 }
