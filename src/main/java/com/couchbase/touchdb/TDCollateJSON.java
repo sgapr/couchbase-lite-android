@@ -26,6 +26,7 @@ public class TDCollateJSON {
 
     // Sets the root directory to search for the ICU data file
     public static native void setICURoot(String path);
+    public static native void releaseICU();
 
     /**
      * Convenience wrapper around testCollateJSON which calculates lengths based on string lengths

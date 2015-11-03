@@ -44,6 +44,12 @@ public class AndroidSQLiteStorageEngine implements SQLiteStorageEngine {
     protected AndroidSQLiteStorageEngine(android.content.Context context){
         this.context = context;
     }
+
+    protected void finalize() throws Throwable
+    {
+        TDCollateJSON.releaseICU();
+    }
+
     @Override
     public boolean open(String path) {
         if(database != null && database.isOpen()) {
