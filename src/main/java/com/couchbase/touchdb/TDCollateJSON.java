@@ -26,6 +26,7 @@ public class TDCollateJSON {
 
     // Sets the root directory to search for the ICU data file
     public static native void setICURoot(String path);
+    public static native void setLocale(String locale);
     public static native void releaseICU();
 
     /**

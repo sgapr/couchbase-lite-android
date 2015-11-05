@@ -31,6 +31,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Locale;
 import java.util.Map;
 import java.util.zip.ZipInputStream;
 
@@ -71,7 +72,7 @@ public class AndroidSQLiteStorageEngine implements SQLiteStorageEngine {
             database = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.CREATE_IF_NECESSARY);
 
             Log.v(Log.TAG_DATABASE, "%s: Opened Android sqlite db", this);
-            loadLibs(context, context.getFilesDir());
+            loadICU4C(context, context.getFilesDir());
             TDCollateJSON.registerCustomCollators(database);
             RevCollator.register(database);
         } catch(SQLiteException e) {
@@ -249,13 +250,14 @@ public class AndroidSQLiteStorageEngine implements SQLiteStorageEngine {
         }
     }
 
-    private static synchronized void loadLibs(android.content.Context context, File workingDir) {
+    private static synchronized void loadICU4C(android.content.Context context, File workingDir) {
         boolean systemICUFileExists = new File("/system/usr/icu/icudt53l.dat").exists();
         String icuRootPath = systemICUFileExists ? "/system/usr" : workingDir.getAbsolutePath();
         TDCollateJSON.setICURoot(icuRootPath);
         if(!systemICUFileExists){
             loadICUData(context, workingDir);
         }
+        TDCollateJSON.setLocale(Locale.getDefault().toString());
     }
 
     private static void loadICUData(android.content.Context context, File workingDir) {

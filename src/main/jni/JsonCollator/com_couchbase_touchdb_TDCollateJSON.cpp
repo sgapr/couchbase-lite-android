@@ -50,6 +50,7 @@ struct SQLiteConnection {
 // ASCII mode, which is like CouchDB default except that strings are compared as binary UTF-8
 #define kTDCollateJSON_ASCII ((void*)2)
 
+#define DEFAULT_COLLATOR_LOCALE "en_US"
 /**
  * Core JNI stuff to cache class and method references for faster use later
  */
@@ -57,6 +58,7 @@ struct SQLiteConnection {
 JavaVM *cached_jvm;
 jclass TDCollateJSONClass;
 jmethodID compareMethod;
+char locale[256];
 Collator *coll;
 
 JNIEXPORT jint JNICALL
@@ -84,6 +86,7 @@ JNI_OnLoad(JavaVM *jvm, void *reserved)
 		return JNI_ERR;
 	}
 
+	strcpy(locale, DEFAULT_COLLATOR_LOCALE);
 	coll = NULL;
 
 	return JNI_VERSION_1_2;
@@ -361,8 +364,7 @@ static int compareStringsUnicode(const char** in1, const char** in2) {
 	// ICU4C - Collator
     if(coll == NULL){
     	UErrorCode status = U_ZERO_ERROR; 
-    	//Collator *coll = Collator::createInstance("en_US", status);
-    	coll = Collator::createInstance(status);
+    	coll = Collator::createInstance(locale, status);
     	if(!U_SUCCESS(status)) {
     		LOGE("Failed to create Collator instance: status=%d", status);
     		return -3;	
@@ -667,6 +669,15 @@ JNIEXPORT void JNICALL Java_com_couchbase_touchdb_TDCollateJSON_setICURoot
 	char const * ICURootPath = env->GetStringUTFChars(ICURoot, NULL);
 	setenv("CBL_ICU_PREFIX", ICURootPath, 1);
 	env->ReleaseStringUTFChars(ICURoot, ICURootPath);
+}
+
+JNIEXPORT void JNICALL Java_com_couchbase_touchdb_TDCollateJSON_setLocale
+    (JNIEnv *env, jclass clazz, jstring jlocale)
+{
+	char const * localeStr = env->GetStringUTFChars(jlocale, NULL);
+	if(strlen(localeStr) < 256)
+		strcpy(locale, localeStr);
+	env->ReleaseStringUTFChars(jlocale, localeStr);
 }
 
 JNIEXPORT void JNICALL Java_com_couchbase_touchdb_TDCollateJSON_releaseICU

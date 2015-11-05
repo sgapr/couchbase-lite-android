@@ -7,6 +7,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import junit.framework.Assert;
 
+import java.text.Collator;
+import java.util.Locale;
+
 public class CollationTest extends LiteTestCase {
 
     public static String TAG = "Collation";
@@ -103,10 +106,46 @@ public class CollationTest extends LiteTestCase {
     }
 
     public void testCollateJapaneseStrings() {
+
         int mode = kTDCollateJSON_Unicode;
-        Assert.assertEquals(-1, TDCollateJSON.testCollateJSONWrapper(mode, encode("あ"), encode("い")));
-        Assert.assertEquals(1, TDCollateJSON.testCollateJSONWrapper(mode, encode("い"), encode("あ")));
-        Assert.assertEquals(0, TDCollateJSON.testCollateJSONWrapper(mode, encode("あ"), encode("あ")));
+
+        // en_US
+        try {
+            Collator c = Collator.getInstance(new Locale("en_US"));
+            Assert.assertEquals(-1, TDCollateJSON.testCollateJSONWrapper(mode, encode("あ"), encode("い")));
+            Assert.assertEquals(1, TDCollateJSON.testCollateJSONWrapper(mode, encode("い"), encode("あ")));
+            Assert.assertEquals(0, TDCollateJSON.testCollateJSONWrapper(mode, encode("あ"), encode("あ")));
+            Assert.assertEquals(c.compare("カー", "カア"), TDCollateJSON.testCollateJSONWrapper(mode, encode("カー"), encode("カア")));
+            Assert.assertEquals(c.compare("鞍", "倉"), TDCollateJSON.testCollateJSONWrapper(mode, encode("鞍"), encode("倉")));
+            Assert.assertEquals(c.compare("鞍", "蔵"), TDCollateJSON.testCollateJSONWrapper(mode, encode("鞍"), encode("蔵")));
+            Assert.assertEquals(c.compare("倉", "蔵"), TDCollateJSON.testCollateJSONWrapper(mode, encode("倉"), encode("蔵")));
+            Assert.assertEquals(c.compare("倉", "鞍"), TDCollateJSON.testCollateJSONWrapper(mode, encode("倉"), encode("鞍")));
+            Assert.assertEquals(c.compare("蔵", "鞍"), TDCollateJSON.testCollateJSONWrapper(mode, encode("蔵"), encode("鞍")));
+            Assert.assertEquals(c.compare("蔵", "倉"), TDCollateJSON.testCollateJSONWrapper(mode, encode("蔵"), encode("倉")));
+        }finally {
+            TDCollateJSON.releaseICU();
+            TDCollateJSON.setLocale("en_US");
+        }
+
+        // ja
+        try{
+            Collator c1 = Collator.getInstance(new Locale("ja"));
+            TDCollateJSON.releaseICU();
+            TDCollateJSON.setLocale("ja");
+            Assert.assertEquals(-1, TDCollateJSON.testCollateJSONWrapper(mode, encode("あ"), encode("い")));
+            Assert.assertEquals(1, TDCollateJSON.testCollateJSONWrapper(mode, encode("い"), encode("あ")));
+            Assert.assertEquals(0, TDCollateJSON.testCollateJSONWrapper(mode, encode("あ"), encode("あ")));
+            Assert.assertEquals(c1.compare("カー", "カア"), TDCollateJSON.testCollateJSONWrapper(mode, encode("カー"), encode("カア")));
+            Assert.assertEquals(c1.compare("鞍", "倉"), TDCollateJSON.testCollateJSONWrapper(mode, encode("鞍"), encode("倉")));
+            Assert.assertEquals(c1.compare("鞍", "蔵"), TDCollateJSON.testCollateJSONWrapper(mode, encode("鞍"), encode("蔵")));
+            Assert.assertEquals(c1.compare("倉", "蔵"), TDCollateJSON.testCollateJSONWrapper(mode, encode("倉"), encode("蔵")));
+            Assert.assertEquals(c1.compare("倉", "鞍"), TDCollateJSON.testCollateJSONWrapper(mode, encode("倉"), encode("鞍")));
+            Assert.assertEquals(c1.compare("蔵", "鞍"), TDCollateJSON.testCollateJSONWrapper(mode, encode("蔵"), encode("鞍")));
+            Assert.assertEquals(c1.compare("蔵", "倉"), TDCollateJSON.testCollateJSONWrapper(mode, encode("蔵"), encode("倉")));
+        }finally {
+            TDCollateJSON.releaseICU();
+            TDCollateJSON.setLocale("en_US");
+        }
     }
     public void testCollateUnicodeStrings() {
         int mode = kTDCollateJSON_Unicode;

@@ -49,6 +49,14 @@ JNIEXPORT void JNICALL Java_com_couchbase_touchdb_TDCollateJSON_setICURoot
 
 /*
  * Class:     com_couchbase_touchdb_TDCollateJSON
+ * Method:    setLocale
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_com_couchbase_touchdb_TDCollateJSON_setLocale
+        (JNIEnv *, jclass, jstring);
+        
+/*
+ * Class:     com_couchbase_touchdb_TDCollateJSON
  * Method:    releaseICU
  * Signature: ()V
  */
