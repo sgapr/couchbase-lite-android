@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -3267,7 +3268,7 @@ public class ViewsTest extends LiteTestCaseWithDB {
             @Override
             public void map(Map<String, Object> document, Emitter emitter) {
                 // null key -> ignored
-                emitter.emit(null,  "foo");
+                emitter.emit(null, "foo");
                 emitter.emit("name", "bar");
             }
         }, "1");
@@ -3345,5 +3346,78 @@ public class ViewsTest extends LiteTestCaseWithDB {
         allQuery.setIncludeDeleted(true);
         e = allQuery.run();
         assertEquals(5, e.getCount());
+    }
+
+    public void testViewWithCompoundKeys() throws CouchbaseLiteException {
+
+        // Setup View
+        View view = database.getView("client_by_name_device");
+        if (view != null) {
+            view.setMap(new Mapper() {
+                @Override
+                public void map(Map<String, Object> document, Emitter emitter) {
+                    /* Emit data to matieralized view */
+                    if (document.get("type") != null
+                            && "client".equals(document.get("type"))
+                            && "device".equals(document.get("origin"))
+                            && document.get("name") != null
+                            && document.get("phone_mobile") != null
+                            && document.get("time_delete") == null
+                            && document.get("device_imei") != null
+                            ) {
+                        HashMap<String, Object> value = new HashMap<String, Object>();
+                        value.put("_id", document.get("_id"));
+                        emitter.emit(Arrays.asList(
+                                document.get("device_imei"),
+                                document.get("name")
+                        ), null);
+                    }
+                }
+            }, "1");
+        }
+
+        // Insert Documents
+        database.runInTransaction(new TransactionalTask() {
+            @Override
+            public boolean run() {
+                try {
+                    for (int i = 0; i < 5000; i++) {
+                        Map<String, Object> props = new HashMap<>();
+                        props.put("time_create", new Date());
+                        props.put("phone_mobile", String.format("*3816400%04d", i));
+                        props.put("name", String.format("Miloš Micić - Micke - %d", i));
+                        props.put("origin", "device");
+                        props.put("id_origin", "266392");
+                        props.put("type", "client");
+                        props.put("device_imei", "352584060971220");
+                        Document doc = database.createDocument();
+                        doc.putProperties(props);
+                    }
+                } catch (CouchbaseLiteException e) {
+                    Log.e(TAG, "Failed to store document", e);
+                    return false;
+                }
+                return true;
+            }
+        });
+
+        // Query
+        String deviceIMEI = "352584060971220";
+        Query orderedQuery = view.createQuery();
+        orderedQuery.setStartKey(Arrays.asList(deviceIMEI, null));
+        orderedQuery.setEndKey(Arrays.asList(deviceIMEI, new HashMap<String, Object>()));
+        try {
+            QueryEnumerator results = orderedQuery.run();
+            /* Iterate through the rows to get the document ids */
+            int counter = 0;
+            for (Iterator<QueryRow> it = results; it.hasNext(); ) {
+                QueryRow row = it.next();
+                Log.v(TAG, String.format("Document ID: %s added to view %s", row.getDocumentId(), "client_by_name_device"));
+                counter++;
+            }
+            assertEquals(5000, counter);
+        } catch (CouchbaseLiteException e) {
+            Log.e(TAG, String.format("Error querying view %s.", "client_by_name_device"), e);
+        }
     }
 }
