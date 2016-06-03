@@ -1,1 +1,3 @@
-include ':couchbase-lite-android', ':libraries:couchbase-lite-java-core'
+include ':couchbase-lite-android', ':couchbase-lite-java-core'
+project(':couchbase-lite-java-core').projectDir = new File('./libraries/couchbase-lite-java-core')
+
